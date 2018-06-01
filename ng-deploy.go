@@ -1,14 +1,14 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"log"
-	"os/exec"
-	"bufio"
 	"fmt"
-	"encoding/json"
+	"flag"
+	"bufio"
+	"os/exec"
 	"strings"
+	"encoding/json"
 )
 
 type Configuration struct {
@@ -27,16 +27,18 @@ type CliFlags struct {
 	Env string
 }
 
-var cliFlags CliFlags
 var config Configuration
-var projectDir string
+var cliFlags CliFlags
 
-func build() {
+/**
+ * Commands
+ */
+func buildCmd() {
 	if _, err := os.Stat("package.json"); os.IsNotExist(err) {
 		log.Fatal("'package.json' could not be found")
 	}
 
-	cmd := exec.Command("npm", "run", "build:prod")
+	cmd := exec.Command("npm", "run", "build:" + cliFlags.Env)
 
 	stderr, _ := cmd.StderrPipe()
 	cmd.Start()
@@ -48,10 +50,17 @@ func build() {
 		m := scanner.Text()
 		fmt.Print(m)
 	}
-	cmd.Wait()
+	err := cmd.Wait()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func sync() {
+func backupCmd() {
+	// TODO: Implement
+}
+
+func syncCmd() {
 	if _, err := os.Stat("dist"); os.IsNotExist(err) {
 		log.Fatal("'dist' could not be found")
 	}
@@ -76,14 +85,17 @@ func sync() {
 	cmd.Wait()
 }
 
+/**
+ * Misc
+ */
 func parseFlags()  {
 	cliFlags = CliFlags{}
 
 	// TODO: Use FlagSet to have both short, long options
+	flag.StringVar(&cliFlags.Env, "env", "", "Environment")
 	flag.BoolVar(&cliFlags.Build, "build", false, "Build project")
 	flag.BoolVar(&cliFlags.Sync, "sync", false, "Sync files")
 	flag.BoolVar(&cliFlags.Backup, "backup", false, "Backup target")
-	flag.StringVar(&cliFlags.Env, "env", "", "Environment")
 
 	flag.Parse()
 
@@ -92,7 +104,7 @@ func parseFlags()  {
 	}
 }
 
-func loadConf() {
+func loadConfiguration() {
 	file, err := os.Open(".ng-deploy.json")
 	defer file.Close()
 
@@ -110,28 +122,26 @@ func loadConf() {
 
 	config = f[cliFlags.Env]
 
-	log.Println(config)
-
 	// make sure there is no trailing /
 	config.Ssh.Path = strings.TrimSuffix(config.Ssh.Path, "/")
 }
 
+/**
+ * Main
+ */
 func main() {
 	parseFlags()
-	loadConf()
-
-	projectDir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Project Dir: %s\n", projectDir)
+	loadConfiguration()
 
 	if cliFlags.Build {
-		build()
+		buildCmd()
+	}
+
+	if cliFlags.Backup {
+		backupCmd()
 	}
 
 	if cliFlags.Sync {
-		sync()
+		syncCmd()
 	}
 }

@@ -1,0 +1,18 @@
+{
+  "dev": {
+    "ssh": {
+      "user": "larry",
+      "host": "google.com",
+      "path": "/my-app-dev",
+      "key": "/home/larry/.ssh/google.com_rsa"
+    }
+  },
+  "prod": {
+    "ssh": {
+      "user": "larry",
+      "host": "google.com",
+      "path": "/my-app",
+      "key": "/home/larry/.ssh/google.com_rsa"
+    }
+  }
+}
