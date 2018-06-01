@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 	"encoding/json"
+	"time"
 )
 
 type Configuration struct {
@@ -18,6 +19,10 @@ type Configuration struct {
 		Host string `json:"host"`
 		Key string `json:"key"`
 	} `json:"ssh"`
+	Backup struct {
+		Prefix string `json:"prefix"`
+		Path string `json:"path"`
+	} `json:"backup"`
 }
 
 type CliFlags struct {
@@ -57,7 +62,33 @@ func buildCmd() {
 }
 
 func backupCmd() {
-	// TODO: Implement
+	lastSlash := strings.LastIndex(config.Ssh.Path, "/")
+	basePath := config.Ssh.Path[0:lastSlash]
+	appPath := config.Ssh.Path[lastSlash + 1:len(config.Ssh.Path)]
+
+	cmd := exec.Command("ssh",
+		"-i", config.Ssh.Key,
+		config.Ssh.User + "@" + config.Ssh.Host,
+		fmt.Sprintf("tar -zcvf %s/%s.%d.tgz -C %s %s",
+			config.Backup.Path,
+			config.Backup.Prefix,
+			time.Now().Unix(),
+			basePath,
+			appPath,
+		),
+	)
+
+	stderr, _ := cmd.StdoutPipe()
+	cmd.Start()
+
+	scanner := bufio.NewScanner(stderr)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		m := scanner.Text()
+		fmt.Println(m)
+	}
+	cmd.Wait()
 }
 
 func syncCmd() {
@@ -68,7 +99,7 @@ func syncCmd() {
 	cmd := exec.Command("rsync",
 		"-arvP",
 		"-e", "ssh -i " + config.Ssh.Key,
-		"dist",
+		"dist/",
 		config.Ssh.User + "@" + config.Ssh.Host + ":" + config.Ssh.Path,
 	)
 
@@ -124,6 +155,7 @@ func loadConfiguration() {
 
 	// make sure there is no trailing /
 	config.Ssh.Path = strings.TrimSuffix(config.Ssh.Path, "/")
+	config.Backup.Path = strings.TrimSuffix(config.Backup.Path, "/")
 }
 
 /**

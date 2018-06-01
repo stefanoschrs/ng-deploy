@@ -5,6 +5,10 @@
       "host": "google.com",
       "path": "/my-app-dev",
       "key": "/home/larry/.ssh/google.com_rsa"
+    },
+    "backup": {
+      "prefix": "google-dev",
+      "path": "/backup"
     }
   },
   "prod": {
@@ -13,6 +17,10 @@
       "host": "google.com",
       "path": "/my-app",
       "key": "/home/larry/.ssh/google.com_rsa"
+    },
+    "backup": {
+      "prefix": "google",
+      "path": "/backup"
     }
   }
 }
