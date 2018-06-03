@@ -13,6 +13,10 @@ import (
 )
 
 type Configuration struct {
+	Aws struct {
+		Bucket string `json:"bucket"`
+		Profile string `json:"profile"`
+	} `json:"aws"`
 	Ssh struct {
 		User string `json:"user"`
 		Path string `json:"path"`
@@ -28,6 +32,7 @@ type Configuration struct {
 type CliFlags struct {
 	Build bool
 	Sync bool
+	SyncType string
 	Backup bool
 	Env string
 }
@@ -91,17 +96,37 @@ func backupCmd() {
 	cmd.Wait()
 }
 
-func syncCmd() {
-	if _, err := os.Stat("dist"); os.IsNotExist(err) {
-		log.Fatal("'dist' could not be found")
-	}
-
+func syncSshCmd() {
 	cmd := exec.Command("rsync",
 		"-arvP",
 		"-e", "ssh -i " + config.Ssh.Key,
 		"dist/",
 		config.Ssh.User + "@" + config.Ssh.Host + ":" + config.Ssh.Path,
 	)
+
+	stderr, _ := cmd.StdoutPipe()
+	cmd.Start()
+
+	scanner := bufio.NewScanner(stderr)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		m := scanner.Text()
+		fmt.Println(m)
+	}
+	cmd.Wait()
+}
+
+func syncAwsCmd() {
+	cmd := exec.Command("aws",
+		"s3",
+		"sync",
+		".",
+		"s3://" + config.Aws.Bucket,
+		"--acl", "public-read",
+		"--profile", config.Aws.Profile,
+	)
+	cmd.Dir = "dist"
 
 	stderr, _ := cmd.StdoutPipe()
 	cmd.Start()
@@ -126,6 +151,7 @@ func parseFlags()  {
 	flag.StringVar(&cliFlags.Env, "env", "", "Environment")
 	flag.BoolVar(&cliFlags.Build, "build", false, "Build project")
 	flag.BoolVar(&cliFlags.Sync, "sync", false, "Sync files")
+	flag.StringVar(&cliFlags.SyncType, "sync-type", "ssh", "How to sync files: ssh, aws")
 	flag.BoolVar(&cliFlags.Backup, "backup", false, "Backup target")
 
 	flag.Parse()
@@ -174,6 +200,14 @@ func main() {
 	}
 
 	if cliFlags.Sync {
-		syncCmd()
+		if _, err := os.Stat("dist"); os.IsNotExist(err) {
+			log.Fatal("'dist' could not be found")
+		}
+
+		if cliFlags.SyncType == "ssh" {
+			syncSshCmd()
+		} else if cliFlags.SyncType == "aws" {
+			syncAwsCmd()
+		}
 	}
 }

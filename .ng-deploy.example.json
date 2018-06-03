@@ -1,5 +1,9 @@
 {
   "dev": {
+    "aws": {
+      "bucket": "google.com",
+      "profile": "larry"
+    },
     "ssh": {
       "user": "larry",
       "host": "google.com",
@@ -12,6 +16,10 @@
     }
   },
   "prod": {
+    "aws": {
+      "bucket": "google.com",
+      "profile": "larry"
+    },
     "ssh": {
       "user": "larry",
       "host": "google.com",

@@ -11,6 +11,8 @@ Select environment
 Build project
 - **sync**  
 Sync files
+- **sync-type**  
+How to sync files: ssh, aws
 - **backup**  
 Backup target
 
