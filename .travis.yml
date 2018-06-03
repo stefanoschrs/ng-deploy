@@ -1,0 +1,25 @@
+language: go
+
+install:
+  - # skip
+
+scripts:
+  - go test -v ./...
+
+before_deploy:
+  - "./scripts/before-deploy.sh"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: Sp5c+86oyInbiB1QykSsd6TSjD1aDPfx2QXLlEr4MId8JHc1L5cOz4QoipA4E3QWAss/jJDJXYOBk6opoMa2zTltOXCReQkYqKubsOLy033i4RReQmgJ5S94zM51sFq8ajnRcevPaVwZ9T4KYGHwmkQxGvezIwxaiJ3v61TzbQht6igxsBytmBuVWEIrvOOShoNuqU06zVx6zSgrWtgIxJqWsH9oB35KbgJ2dTUQhp7dsn72LDFoBrmYtMSZZ6/gyBQCDcoHUpm5Dps2b10NRNRzyetfaSWYvG8CLrYcz+yLvf0AWG1OenLs+ShhTN4U5z2zWvnCq9mzzVv3vEDVr0GkWJl1BfN7L1M2oJNgXwYtmjrCQI7bRlbb3D3vNgslIwxVUfR2eqcBFiKN1h+t42ypEtSj9azjfmSQuEHGC1x8M2sdV6B6Zq5V4ti43Rdt/yjIjM0xf3xinhqKCiVLSR23EZMyDdELDLZFkBOIdWBu0+5IK1YK45GEOL9y0Mo8xDxtBBTPvdS23XvBXLtgemrD2gJoQkm2zjZd3vsaVun6YBktbFXTZGr3e35bBgaBbtszY5mnKWSH08UvkkoFKQeQuiXhKLhgMe1a5eRUBtVCA0UJSDLQj/UStK4bJfK3qG7oXSrML/kDOdVjvmKMzgFEc01nYDFwANzUOTfWkBU=
+  on:
+    repo: stefanoschrs/ng-deploy
+  file:
+    - build/ng-deploy-linux-amd64
+    # - build/deploy-linux-linux-386
+    # - build/deploy-linux-windows-386.exe
+    # - build/deploy-linux-windows-amd64.exe
+
+after_deploy:
+  - "./scripts/after-deploy.sh"
